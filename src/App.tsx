@@ -77,7 +77,7 @@ export default function App() {
               exit={{ opacity: 0, x: 20 }}
               className="h-full"
             >
-              <AnswerKeySetup answerKey={answerKey} onSave={saveAnswerKey} />
+              <AnswerKeySetup answerKey={answerKey} onSave={saveAnswerKey} onFinish={() => setActiveTab('scan')} />
             </motion.div>
           )}
 
@@ -145,7 +145,7 @@ export default function App() {
 // ---------------------------------------------------------
 // Answer Key Setup Component
 // ---------------------------------------------------------
-function AnswerKeySetup({ answerKey, onSave }: { answerKey: Record<number, string>, onSave: (key: Record<number, string>) => void }) {
+function AnswerKeySetup({ answerKey, onSave, onFinish }: { answerKey: Record<number, string>, onSave: (key: Record<number, string>) => void, onFinish: () => void }) {
   const [fastInput, setFastInput] = useState('');
   
   const options = ['A', 'B', 'C', 'D'];
@@ -182,8 +182,8 @@ function AnswerKeySetup({ answerKey, onSave }: { answerKey: Record<number, strin
   };
 
   return (
-    <div className="p-4 flex flex-col h-full">
-      <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 mb-6">
+    <div className="p-4 flex flex-col h-full relative">
+      <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 mb-6 shrink-0">
         <h2 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Input Cepat Kunci Jawaban</h2>
         <p className="text-[10px] text-slate-400 mb-3 font-medium">Ketikkan A,B,C, atau D berurutan. (Contoh: AABCC...)</p>
         <textarea
@@ -198,7 +198,7 @@ function AnswerKeySetup({ answerKey, onSave }: { answerKey: Record<number, strin
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto pb-8">
+      <div className="flex-1 overflow-y-auto pb-24">
         <h2 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4 px-1">Atau Pilih Manual (1-50):</h2>
         <div className="grid grid-cols-2 gap-x-6 sm:gap-x-12 px-1">
           <div className="flex flex-col gap-y-4">
@@ -247,6 +247,16 @@ function AnswerKeySetup({ answerKey, onSave }: { answerKey: Record<number, strin
           </div>
         </div>
       </div>
+      
+      <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-slate-50 via-slate-50 to-transparent">
+        <button 
+          onClick={onFinish}
+          className="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-lg shadow-blue-500/20 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+        >
+          <CheckCircle2 className="w-5 h-5" />
+          Simpan Kunci Jawaban
+        </button>
+      </div>
     </div>
   );
 }
@@ -268,6 +278,7 @@ function Scanner({ isProcessing, onCapture }: { isProcessing: boolean, onCapture
       setStream(mediaStream);
       if (vRef.current) {
         vRef.current.srcObject = mediaStream;
+        vRef.current.play().catch(e => console.error("Video play prevented:", e));
       }
     } catch (err: any) {
       console.error(err);
@@ -355,7 +366,8 @@ function Scanner({ isProcessing, onCapture }: { isProcessing: boolean, onCapture
           <video 
             ref={vRef} 
             autoPlay 
-            playsInline 
+            playsInline
+            muted
             className="w-full h-full object-cover relative z-10"
           />
           <canvas ref={cRef} className="hidden" />
