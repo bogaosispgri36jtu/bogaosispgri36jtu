@@ -270,19 +270,27 @@ function Scanner({ isProcessing, onCapture }: { isProcessing: boolean, onCapture
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  const [isCameraStarting, setIsCameraStarting] = useState(true);
+
   const startCamera = async () => {
+    setIsCameraStarting(true);
+    setError(null);
     try {
       const mediaStream = await navigator.mediaDevices.getUserMedia({ 
-        video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 } } 
+        video: { facingMode: 'environment' } 
       });
       setStream(mediaStream);
       if (vRef.current) {
         vRef.current.srcObject = mediaStream;
-        vRef.current.play().catch(e => console.error("Video play prevented:", e));
+        vRef.current.onloadedmetadata = () => {
+          vRef.current?.play().catch(e => console.error("Video play prevented:", e));
+          setIsCameraStarting(false);
+        };
       }
     } catch (err: any) {
-      console.error(err);
-      setError("Tidak dapat mengakses kamera. Harap izinkan akses kamera atau gunakan fitur upload gambar.");
+      console.error("Camera error:", err);
+      setError("Tidak dapat mengakses kamera belakang. Pastikan izin kamera diberikan.");
+      setIsCameraStarting(false);
     }
   };
 
@@ -363,12 +371,18 @@ function Scanner({ isProcessing, onCapture }: { isProcessing: boolean, onCapture
         </div>
       ) : (
         <>
+          {isCameraStarting && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-400 z-20 bg-slate-900">
+              <div className="w-8 h-8 border-2 border-slate-700 border-t-blue-500 rounded-full animate-spin mb-4"></div>
+              <p className="text-xs uppercase tracking-widest font-bold font-mono">Menyiapkankan Kamera...</p>
+            </div>
+          )}
           <video 
             ref={vRef} 
             autoPlay 
             playsInline
             muted
-            className="w-full h-full object-cover relative z-10"
+            className={`w-full h-full object-cover relative z-10 transition-opacity duration-300 ${isCameraStarting ? 'opacity-0' : 'opacity-100'}`}
           />
           <canvas ref={cRef} className="hidden" />
           
@@ -424,21 +438,24 @@ function Results({
   const evaluation: any[] = [];
 
   for (let i = 1; i <= totalQuestions; i++) {
-    const correctAns = answerKey[i];
-    const userAns = scannedAnswers[i.toString()];
+    const rawCorrect = answerKey[i];
+    const rawUser = scannedAnswers[i.toString()];
+
+    const correctAns = rawCorrect ? rawCorrect.trim().toUpperCase() : null;
+    const userAns = typeof rawUser === 'string' ? rawUser.trim().toUpperCase() : null;
     
     let status = 'wrong';
-    if (!userAns) {
+    if (!userAns || userAns === 'NULL' || userAns === 'UNDEFINED' || userAns === '') {
         status = 'missing';
         missing++;
-    } else if (userAns.toUpperCase() === correctAns?.toUpperCase()) {
+    } else if (userAns === correctAns) {
         status = 'correct';
         correct++;
     } else {
         wrong++;
     }
 
-    evaluation.push({ num: i, correctAns, userAns, status });
+    evaluation.push({ num: i, correctAns: rawCorrect, userAns: userAns === 'NULL' ? null : userAns, status });
   }
 
   const score = totalQuestions > 0 ? Math.round((correct / totalQuestions) * 100) : 0;

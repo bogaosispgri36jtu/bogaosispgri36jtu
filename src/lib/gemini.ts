@@ -12,22 +12,27 @@ export async function extractAnswersFromImage(base64Image: string): Promise<Reco
     const base64Data = base64Image.split(',')[1] || base64Image;
     const mimeType = base64Image.split(';')[0].split(':')[1] || 'image/jpeg';
 
-    const prompt = `Anda adalah sistem pengoreksi otomatis Lembar Jawaban Komputer (LJK) yang sangat akurat.
-Tugas Anda adalah membaca gambar LJK yang diberikan dan mengekstrak jawaban untuk soal Pilihan Ganda (nomor 1 sampai 50).
-Pilihan ganda biasanya terdiri dari opsi A, B, C, D. Deteksi bulatan yang paling penuh atau hitam untuk setiap nomor.
-Jika bulatan tidak jelas, atau ada lebih dari satu bulatan, atau tidak terisi, kembalikan null untuk nomor tersebut.
+    const prompt = `Anda adalah sistem pengoreksi otomatis Lembar Jawaban Komputer (LJK) tingkat presisi tinggi.
+Tugas Anda adalah membaca KERTAS LEMBAR JAWABAN (LJK) yang diunggah dan mengekstrak LENGKAP SEMUA jawaban siswa untuk soal Pilihan Ganda (nomor 1 sampai dengan 50).
 
-SANGAT PENTING: Anda HANYA boleh mengembalikan nilai dengan format JSON objek yang valid. Jangan tambahkan teks markdown seperti \`\`\`json.
-Format harus persis seperti ini:
-{
-  "1": "A",
-  "2": "C",
-  "3": null,
-  ... (sampai 50)
-}`;
+Instruksi Detail & Layout Kertas:
+1. Perhatikan baik-baik layout kertas tersebut. Terdapat tabel "PILIHAN GANDA" di bagian tengah bawah.
+2. Terdapat tepat 5 kolom nomor, dengan masing-masing kolom berisi 10 nomor berurutan ke bawah:
+   - Kolom 1: Nomor 1 sampai 10
+   - Kolom 2: Nomor 11 sampai 20
+   - Kolom 3: Nomor 21 sampai 30
+   - Kolom 4: Nomor 31 sampai 40
+   - Kolom 5: Nomor 41 sampai 50
+3. Di sebelah kanan setiap nomor terdapat 4 bulatan berhuruf A, B, C, dan D.
+4. Periksa SETIAP NOMOR satu per satu. Lihat manakah bulatan (A, B, C, atau D) yang paling hitam atau diarsir tebal oleh siswa.
+5. Jika siswa mengarsir bulatan A, kembalikan "A". Jika B, kembalikan "B". Jika C, kembalikan "C". Jika D, kembalikan "D".
+6. Jika tidak ada bulatan yang diarsir, atau ada lebih dari satu yang diarsir tebal sehingga ambigu, kembalikan null.
+
+PENTING: Jangan melewatkan satu nomor pun. Baca secara berurutan sesuai kolom.
+HANYA kembalikan JSON Object murni yang berisi mapping key (string "1" s/d "50") ke value ("A", "B", "C", "D", atau null).`;
 
     const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
+      model: 'gemini-2.5-pro',
       contents: [
         {
           role: 'user',
