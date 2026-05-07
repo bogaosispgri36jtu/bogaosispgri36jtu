@@ -64,8 +64,8 @@ HANYA kembalikan JSON Object murni yang berisi mapping key (string "1" s/d "50")
     }
     
     return parsed;
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error extracting answers:", error);
-    throw new Error("Gagal memproses gambar. Pastikan gambar jelas dan coba lagi.");
+    throw new Error(`Gagal memproses gambar. Detail: ${error?.message || "Kesalahan tidak diketahui"} Coba pastikan gambar lebih jelas.`);
   }
 }
