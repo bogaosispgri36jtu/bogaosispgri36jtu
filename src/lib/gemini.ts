@@ -1,8 +1,12 @@
 import { GoogleGenAI } from "@google/genai";
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-
 export async function extractAnswersFromImage(base64Image: string): Promise<Record<string, string | null>> {
+  if (!process.env.GEMINI_API_KEY) {
+    throw new Error("Kunci API Gemini (GEMINI_API_KEY) belum diatur. Silakan tambahkan Environment Variable di Vercel.");
+  }
+
+  const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+
   try {
     // Remove the data url prefix (e.g. data:image/jpeg;base64,) if present
     const base64Data = base64Image.split(',')[1] || base64Image;
