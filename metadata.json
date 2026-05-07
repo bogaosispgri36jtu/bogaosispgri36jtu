@@ -1,0 +1,8 @@
+{
+  "name": "Koreksi LJK Cepat",
+  "description": "Aplikasi pemeriksa lembar jawaban komputer (LJK) menggunakan kamera HP dan AI, tanpa database.",
+  "requestFramePermissions": [
+    "camera"
+  ],
+  "majorCapabilities": []
+}
