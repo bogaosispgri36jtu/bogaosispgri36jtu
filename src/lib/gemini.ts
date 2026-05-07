@@ -32,7 +32,7 @@ PENTING: Jangan melewatkan satu nomor pun. Baca secara berurutan sesuai kolom.
 HANYA kembalikan JSON Object murni yang berisi mapping key (string "1" s/d "50") ke value ("A", "B", "C", "D", atau null).`;
 
     const response = await ai.models.generateContent({
-      model: 'gemini-2.5-pro',
+      model: 'gemini-2.5-flash',
       contents: [
         {
           role: 'user',
@@ -66,6 +66,10 @@ HANYA kembalikan JSON Object murni yang berisi mapping key (string "1" s/d "50")
     return parsed;
   } catch (error: any) {
     console.error("Error extracting answers:", error);
-    throw new Error(`Gagal memproses gambar. Detail: ${error?.message || "Kesalahan tidak diketahui"} Coba pastikan gambar lebih jelas.`);
+    const msg = error?.message || "";
+    if (msg.includes("429") || msg.includes("Quota exceeded")) {
+        throw new Error("Batas penggunaan gratis (Quota) API Gemini Anda telah habis atau terlalu banyak permintaan dalam waktu singkat. Silakan coba lagi nanti.");
+    }
+    throw new Error(`Gagal memproses gambar. Detail: ${msg || "Kesalahan tidak diketahui"} Coba pastikan gambar lebih jelas.`);
   }
 }
